@@ -29,9 +29,12 @@ var alert = data
   |alert()
     .id('{{ .TaskName }}/{{ .Group }}')
     .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }}')
-    .info(lambda: "stat" > info OR "sigma" > infoSig)
-    .warn(lambda: "stat" > warn OR "sigma" > warnSig)
-    .crit(lambda: "stat" > crit OR "sigma" > critSig)
+    // .info(lambda: "stat" > info OR "sigma" > infoSig)
+    // .warn(lambda: "stat" > warn OR "sigma" > warnSig)
+    // .crit(lambda: "stat" > crit OR "sigma" > critSig)
+    .info(lambda: "stat" > info)
+    .warn(lambda: "stat" > warn)
+    .crit(lambda: "stat" > crit)
     .stateChangesOnly(60m)
 
 // Alert
