@@ -1,7 +1,7 @@
 // Parameters
-var info = 50
-var warn = 80
-var crit = 90
+var info = 1000
+var warn = 1500
+var crit = 2000
 var infoSig = 2.5
 var warnSig = 3
 var critSig = 3.5
@@ -13,13 +13,12 @@ var data = stream
   |from()
     .database('telegraf')
     .retentionPolicy('autogen')
-    .measurement('cpu')
+    .measurement('mongodb')
     .groupBy('host')
   |window()
     .period(period)
     .every(every)
-  |mean('usage_idle')
-  |eval(lambda: 100.0 - "mean")
+  |mean('open_connections')
     .as('stat')
 
 // Thresholds
@@ -28,7 +27,7 @@ var alert = data
     .as('sigma')
     .keep()
   |alert()
-    .id('{{ .Name }}/{{ .Group }}')
+    .id('{{ .TaskName }}/{{ .Group }}')
     .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }}')
     .info(lambda: "stat" > info OR "sigma" > infoSig)
     .warn(lambda: "stat" > warn OR "sigma" > warnSig)
