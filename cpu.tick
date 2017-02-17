@@ -5,8 +5,8 @@ var crit = 90
 var infoSig = 2.5
 var warnSig = 3
 var critSig = 3.5
-var period = 10s
-var every = 10s
+var period = 1m
+var every = 1m
 
 // Dataframe
 var data = stream
@@ -29,7 +29,7 @@ var alert = data
     .keep()
   |alert()
     .id('{{ .Name }}/{{ .Group }}')
-    .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }} on {{ .Time }}')
+    .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }} at {{ .Time }}')
     // .info(lambda: "stat" > info OR "sigma" > infoSig)
     // .warn(lambda: "stat" > warn OR "sigma" > warnSig)
     // .crit(lambda: "stat" > crit OR "sigma" > critSig)
