@@ -1,0 +1,42 @@
+// Parameters
+var info = 80
+var warn = 90
+var crit = 95
+var infoSig = 2.5
+var warnSig = 3
+var critSig = 3.5
+var period = 1m
+var every = 1m
+
+// Dataframe
+var data = stream
+  |from()
+    .database('telegraf')
+    .retentionPolicy('autogen')
+    .measurement('disk')
+    .groupBy('host', 'path')
+  |window()
+    .period(period)
+    .every(every)
+  |mean('used_percent')
+    .as('stat')
+
+// Thresholds
+var alert = data
+  |eval(lambda: sigma("stat"))
+    .as('sigma')
+    .keep()
+  |alert()
+    .id('{{ .Name }}/{{ .Group }}')
+    .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }} at {{ .Time }}')
+    // .info(lambda: "stat" > info OR "sigma" > infoSig)
+    // .warn(lambda: "stat" > warn OR "sigma" > warnSig)
+    // .crit(lambda: "stat" > crit OR "sigma" > critSig)
+    .info(lambda: "stat" > info)
+    .warn(lambda: "stat" > warn)
+    .crit(lambda: "stat" > crit)
+    .stateChangesOnly(60m)
+
+// Alert
+alert
+  .post('http://kapacitor-alert-api.default:3000/api/alert')
