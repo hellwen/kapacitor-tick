@@ -39,4 +39,4 @@ var alert = data
 
 // Alert
 alert
-  .post('http://kapacitor-alert-api:3000/api/alert')
+  .post('http://kapacitor-alert-api:3000/api/alert/ops')

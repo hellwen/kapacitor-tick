@@ -1,7 +1,7 @@
 // Parameters
-var info = 1000
-var warn = 1500
-var crit = 2000
+var info = 1 
+var warn = 80
+var crit = 90
 var infoSig = 2.5
 var warnSig = 3
 var critSig = 3.5
@@ -13,12 +13,13 @@ var data = stream
   |from()
     .database('telegraf')
     .retentionPolicy('autogen')
-    .measurement('mongodb')
+    .measurement('cpu')
     .groupBy('host')
   |window()
     .period(period)
     .every(every)
-  |mean('open_connections')
+  |mean('usage_idle')
+  |eval(lambda: 100.0 - "mean")
     .as('stat')
 
 // Thresholds
@@ -27,7 +28,7 @@ var alert = data
     .as('sigma')
     .keep()
   |alert()
-    .id('{{ .TaskName }}/{{ .Group }}')
+    .id('{{ .Name }}/{{ .Group }}')
     .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "stat" | printf "%0.2f" }} at {{ .Time }}')
     // .info(lambda: "stat" > info OR "sigma" > infoSig)
     // .warn(lambda: "stat" > warn OR "sigma" > warnSig)
@@ -39,4 +40,4 @@ var alert = data
 
 // Alert
 alert
-  .post('http://kapacitor-alert-api:3000/api/alert/dba')
+  .post('http://139.199.73.164:3000/api/alert/ops')
