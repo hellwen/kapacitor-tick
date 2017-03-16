@@ -51,7 +51,7 @@ var alert = usage_rate
     .keep()
   |alert()
     .id('{{ .Name }}/{{ .Group }}')
-    .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "rate" | printf "%0.2f" }}% at {{ .Time }}')
+    .message('{{ .ID }} is {{ .Level }} percent:{{ index .Fields "rate" | printf "%0.2f" }} at {{ .Time }}')
     // .info(lambda: "rate" > info OR "sigma" > infoSig)
     // .warn(lambda: "rate" > warn OR "sigma" > warnSig)
     // .crit(lambda: "rate" > crit OR "sigma" > critSig)
