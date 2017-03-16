@@ -1,0 +1,65 @@
+// Parameters
+var info = 50
+var warn = 80
+var crit = 90
+var infoSig = 2.5
+var warnSig = 3
+var critSig = 3.5
+var period = 1m
+var every = 1m
+
+// Dataframe
+var limit = stream
+  |from()
+    .database('k8s')
+    .retentionPolicy('default')
+    .measurement('memory/limit')
+    .groupBy('pod_name')
+  |window()
+    .period(period)
+    .every(every)
+  |where(lambda: "type" == 'pod_container' AND "namespace_name" == 'default')
+  |mean('value')
+    .as('value')
+
+var usage = stream
+  |from()
+    .database('k8s')
+    .retentionPolicy('default')
+    .measurement('memory/usage')
+    .groupBy('pod_name')
+  |window()
+    .period(period)
+    .every(every)
+  |where(lambda: "type" == 'pod_container' AND "namespace_name" == 'default')
+  |mean('value')
+    .as('value')
+
+var usage_rate = limit
+  |join(usage)
+    .as('limit', 'usage')
+    // points that are within 1 second are considered the same time.
+    .tolerance(2m)
+    // fill missing values with 0, implies outer join.
+    .fill(0.0)
+  |eval(lambda: float(100) * ("usage.value" / "limit.value"))
+    .as('rate')
+
+var alert = usage_rate
+  |eval(lambda: sigma("rate"))
+    .as('sigma')
+    .keep()
+  |alert()
+    .id('{{ .Name }}/{{ .Group }}')
+    .message('{{ .ID }} is {{ .Level }} value:{{ index .Fields "rate" | printf "%0.2f" }}% at {{ .Time }}')
+    // .info(lambda: "rate" > info OR "sigma" > infoSig)
+    // .warn(lambda: "rate" > warn OR "sigma" > warnSig)
+    // .crit(lambda: "rate" > crit OR "sigma" > critSig)
+    .info(lambda: "rate" > info)
+    .warn(lambda: "rate" > warn)
+    .crit(lambda: "rate" > crit)
+    .stateChangesOnly(60m)
+
+// Alert
+alert
+  .post('http://kapacitor-alert-api:3000/api/alert/ops')
