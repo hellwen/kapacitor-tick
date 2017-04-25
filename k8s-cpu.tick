@@ -1,5 +1,5 @@
 // Parameters
-var info = 50
+var info = 10
 var warn = 80
 var crit = 90
 var infoSig = 2.5
